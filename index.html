@@ -1,37 +1,559 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CoRP</title>
-  <link rel="icon" href="data:,">
-  <style>
-    :root { color-scheme: light dark; --bg: #f4f7f7; --ink: #14212a; }
-    @media (prefers-color-scheme: dark) { :root { --bg: #0f1719; --ink: #e2eaeb; } }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 1.5rem;
-      box-sizing: border-box;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-    h1 {
-      margin: 0;
-      max-width: 16ch;
-      font-size: clamp(2.25rem, 7vw, 4.5rem);
-      font-weight: 600;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-      text-align: center;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <title>CoRP: Compact Robot Policies Need Fine-Grained Visual Representations</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="CoRP is a 48.9M-parameter manipulation policy. On closed-set benchmarks, its performance comes from a visual representation that is pretrained, task-adapted, and compressed.">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
-  <h1>Videos and details coming soon.</h1>
+  <div class="toc">
+    <h3>Content</h3>
+    <hr>
+    <ul>
+      <li><a href="#contribution">Contribution</a></li>
+      <li><a href="#simulation">Simulation</a></li>
+      <li class="toc-subsection"><a href="#libero">LIBERO</a></li>
+      <li class="toc-subsection"><a href="#robotwin">RoboTwin 2.0</a></li>
+      <li class="toc-subsection"><a href="#peg">Peg Insertion</a></li>
+      <li><a href="#real">Real-World</a></li>
+      <li class="toc-subsection"><a href="#pick">Pick cup</a></li>
+      <li class="toc-subsection"><a href="#spoon">Place spoon</a></li>
+      <li class="toc-subsection"><a href="#plug">Plug insertion</a></li>
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#experiments">Experiments</a></li>
+      <li class="toc-subsection"><a href="#benchmarks">Benchmarks</a></li>
+      <li class="toc-subsection"><a href="#init">Pretraining</a></li>
+      <li class="toc-subsection"><a href="#adaptation">Adaptation</a></li>
+      <li class="toc-subsection"><a href="#language">Language</a></li>
+      <li class="toc-subsection"><a href="#bottleneck">Compression</a></li>
+      <li><a href="#bibtex">BibTeX</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    <div class="hero-text">CoRP</div>
+    <div class="sub-hero-text">Compact Robot Policies Need Fine-Grained Visual Representations</div>
+    <p class="kicker">Compressed Representation Policy · 48.9M parameters · no vision-language model · no video-generative prior</p>
+
+    <div class="authors">
+      Anonymous Authors
+      <br><br>
+      <span class="affiliation">Under review at ICLR 2027</span>
+    </div>
+
+    <video id="teaser-video" class="wide-video" src="videos/dynamic/dynamic_adjustment_01.mp4?v=31r" controls muted playsinline autoplay loop></video>
+
+    <div class="tagline" id="contribution">Contribution.</div>
+    <div class="section">
+      <ul>
+        <li><strong>Compressed Representation Policy (CoRP)</strong>, a 48.9M-parameter policy without any VLM or video-generative prior that is competitive with systems up to 163× larger on LIBERO and RoboTwin 2.0, and serves as a controlled testbed for isolating the role of representation.</li>
+        <li><strong>A controlled ablation study</strong> that varies encoder initialization, fine-tuning, token compression, and language conditioning one at a time, showing that effective compact policies require visual representations that are pretrained, task-adapted, and compressed, and that language helps only when the goal is visually ambiguous.</li>
+        <li><strong>Real-robot validation</strong> on three bimanual tasks (closed-loop adaptation to object displacement, coordinated two-arm placement, and precision plug insertion), providing qualitative evidence that CoRP, pretrained on our large-scale real-world corpus, transfers to physical hardware.</li>
+      </ul>
+    </div>
+
+    <div class="tagline" id="simulation">Simulation.</div>
+    <div class="section" id="rollouts">
+      <h2 id="libero">LIBERO</h2>
+      <p>Four suites in one grid. The arrows step through the tasks in that suite.</p>
+      <div class="suite-grid">
+<div class="suite-cell">
+      <h3>LIBERO-Spatial</h3>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/libero/libero_spatial_task000_trial000_pick_up_the_black_bowl_between_the_plate_and_the_ramekin_and_place_it_on_the_pla.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl between the plate and the ramekin and place it on the pla&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task001_trial000_pick_up_the_black_bowl_next_to_the_ramekin_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl next to the ramekin and place it on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task002_trial000_pick_up_the_black_bowl_from_table_center_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl from table center and place it on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task003_trial000_pick_up_the_black_bowl_on_the_cookie_box_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl on the cookie box and place it on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task004_trial000_pick_up_the_black_bowl_in_the_top_drawer_of_the_wooden_cabinet_and_place_it_on_t.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl in the top drawer of the wooden cabinet and place it on t&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task005_trial000_pick_up_the_black_bowl_on_the_ramekin_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl on the ramekin and place it on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task006_trial000_pick_up_the_black_bowl_next_to_the_cookie_box_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl next to the cookie box and place it on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task007_trial000_pick_up_the_black_bowl_on_the_stove_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl on the stove and place it on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task008_trial000_pick_up_the_black_bowl_next_to_the_plate_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl next to the plate and place it on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_spatial_task009_trial000_pick_up_the_black_bowl_on_the_wooden_cabinet_and_place_it_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Pick up the black bowl on the wooden cabinet and place it on the plate&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage">
+            <video controls playsinline loop muted preload="metadata"></video>
+          </div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+        <p class="figure-caption selector-caption"><span class="selector-index"></span><span class="selector-label"></span></p>
+      </div>
+      </div>
+<div class="suite-cell">
+      <h3>LIBERO-Object</h3>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/libero/libero_object_task000_trial000_pick_up_the_alphabet_soup_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the alphabet soup and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task001_trial000_pick_up_the_cream_cheese_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the cream cheese and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task002_trial000_pick_up_the_salad_dressing_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the salad dressing and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task003_trial000_pick_up_the_bbq_sauce_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the bbq sauce and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task004_trial000_pick_up_the_ketchup_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the ketchup and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task005_trial000_pick_up_the_tomato_sauce_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the tomato sauce and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task006_trial000_pick_up_the_butter_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the butter and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task007_trial000_pick_up_the_milk_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the milk and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task008_trial000_pick_up_the_chocolate_pudding_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the chocolate pudding and place it in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_object_task009_trial000_pick_up_the_orange_juice_and_place_it_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Pick up the orange juice and place it in the basket&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage">
+            <video controls playsinline loop muted preload="metadata"></video>
+          </div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+        <p class="figure-caption selector-caption"><span class="selector-index"></span><span class="selector-label"></span></p>
+      </div>
+      </div>
+<div class="suite-cell">
+      <h3>LIBERO-Goal</h3>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/libero/libero_goal_task000_trial000_open_the_middle_drawer_of_the_cabinet.mp4&quot;, &quot;caption&quot;: &quot;Open the middle drawer of the cabinet&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task001_trial000_put_the_bowl_on_the_stove.mp4&quot;, &quot;caption&quot;: &quot;Put the bowl on the stove&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task002_trial000_put_the_wine_bottle_on_top_of_the_cabinet.mp4&quot;, &quot;caption&quot;: &quot;Put the wine bottle on top of the cabinet&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task003_trial000_open_the_top_drawer_and_put_the_bowl_inside.mp4&quot;, &quot;caption&quot;: &quot;Open the top drawer and put the bowl inside&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task004_trial000_put_the_bowl_on_top_of_the_cabinet.mp4&quot;, &quot;caption&quot;: &quot;Put the bowl on top of the cabinet&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task005_trial000_push_the_plate_to_the_front_of_the_stove.mp4&quot;, &quot;caption&quot;: &quot;Push the plate to the front of the stove&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task006_trial000_put_the_cream_cheese_in_the_bowl.mp4&quot;, &quot;caption&quot;: &quot;Put the cream cheese in the bowl&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task007_trial000_turn_on_the_stove.mp4&quot;, &quot;caption&quot;: &quot;Turn on the stove&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task008_trial000_put_the_bowl_on_the_plate.mp4&quot;, &quot;caption&quot;: &quot;Put the bowl on the plate&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_goal_task009_trial000_put_the_wine_bottle_on_the_rack.mp4&quot;, &quot;caption&quot;: &quot;Put the wine bottle on the rack&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage">
+            <video controls playsinline loop muted preload="metadata"></video>
+          </div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+        <p class="figure-caption selector-caption"><span class="selector-index"></span><span class="selector-label"></span></p>
+      </div>
+      </div>
+<div class="suite-cell">
+      <h3>LIBERO-Long</h3>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/libero/libero_10_task000_trial000_put_both_the_alphabet_soup_and_the_tomato_sauce_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Put both the alphabet soup and the tomato sauce in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task001_trial000_put_both_the_cream_cheese_box_and_the_butter_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Put both the cream cheese box and the butter in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task002_trial000_turn_on_the_stove_and_put_the_moka_pot_on_it.mp4&quot;, &quot;caption&quot;: &quot;Turn on the stove and put the moka pot on it&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task003_trial000_put_the_black_bowl_in_the_bottom_drawer_of_the_cabinet_and_close_it.mp4&quot;, &quot;caption&quot;: &quot;Put the black bowl in the bottom drawer of the cabinet and close it&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task004_trial000_put_the_white_mug_on_the_left_plate_and_put_the_yellow_and_white_mug_on_the_righ.mp4&quot;, &quot;caption&quot;: &quot;Put the white mug on the left plate and put the yellow and white mug on the righ&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task005_trial000_pick_up_the_book_and_place_it_in_the_back_compartment_of_the_caddy.mp4&quot;, &quot;caption&quot;: &quot;Pick up the book and place it in the back compartment of the caddy&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task006_trial000_put_the_white_mug_on_the_plate_and_put_the_chocolate_pudding_to_the_right_of_the.mp4&quot;, &quot;caption&quot;: &quot;Put the white mug on the plate and put the chocolate pudding to the right of the&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task007_trial000_put_both_the_alphabet_soup_and_the_cream_cheese_box_in_the_basket.mp4&quot;, &quot;caption&quot;: &quot;Put both the alphabet soup and the cream cheese box in the basket&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task008_trial000_put_both_moka_pots_on_the_stove.mp4&quot;, &quot;caption&quot;: &quot;Put both moka pots on the stove&quot;}, {&quot;src&quot;: &quot;videos/libero/libero_10_task009_trial000_put_the_yellow_and_white_mug_in_the_microwave_and_close_it.mp4&quot;, &quot;caption&quot;: &quot;Put the yellow and white mug in the microwave and close it&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage">
+            <video controls playsinline loop muted preload="metadata"></video>
+          </div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+        <p class="figure-caption selector-caption"><span class="selector-index"></span><span class="selector-label"></span></p>
+      </div>
+      </div>
+      </div>
+
+    </div>
+
+    <div class="section">
+      <h2 id="robotwin">RoboTwin 2.0</h2>
+      <p>One successful rollout per task. The arrows move to the next task. Left, head, and right play together in the same row.</p>
+      <h3>Clean</h3>
+      <div class="selector" data-items="[{&quot;caption&quot;: &quot;Adjust bottle&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/adjust_bottle/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/adjust_bottle/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/adjust_bottle/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Beat block hammer&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/beat_block_hammer/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/beat_block_hammer/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/beat_block_hammer/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Blocks ranking rgb&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/blocks_ranking_rgb/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/blocks_ranking_rgb/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/blocks_ranking_rgb/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Blocks ranking size&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/blocks_ranking_size/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/blocks_ranking_size/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/blocks_ranking_size/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Click alarmclock&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/click_alarmclock/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/click_alarmclock/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/click_alarmclock/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Click bell&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/click_bell/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/click_bell/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/click_bell/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Dump bin bigbin&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/dump_bin_bigbin/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/dump_bin_bigbin/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/dump_bin_bigbin/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Grab roller&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/grab_roller/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/grab_roller/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/grab_roller/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Handover block&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/handover_block/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/handover_block/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/handover_block/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Handover mic&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/handover_mic/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/handover_mic/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/handover_mic/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Hanging mug&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/hanging_mug/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/hanging_mug/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/hanging_mug/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Lift pot&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/lift_pot/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/lift_pot/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/lift_pot/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move can pot&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_can_pot/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_can_pot/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_can_pot/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move pillbottle pad&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_pillbottle_pad/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_pillbottle_pad/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_pillbottle_pad/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move playingcard away&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_playingcard_away/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_playingcard_away/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_playingcard_away/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move stapler pad&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_stapler_pad/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_stapler_pad/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/move_stapler_pad/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Open laptop&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/open_laptop/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/open_laptop/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/open_laptop/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Open microwave&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/open_microwave/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/open_microwave/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/open_microwave/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Pick diverse bottles&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/pick_diverse_bottles/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/pick_diverse_bottles/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/pick_diverse_bottles/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Pick dual bottles&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/pick_dual_bottles/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/pick_dual_bottles/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/pick_dual_bottles/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place a2b left&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_a2b_left/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_a2b_left/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_a2b_left/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place a2b right&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_a2b_right/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_a2b_right/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_a2b_right/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place bread basket&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_bread_basket/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_bread_basket/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_bread_basket/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place bread skillet&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_bread_skillet/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_bread_skillet/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_bread_skillet/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place burger fries&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_burger_fries/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_burger_fries/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_burger_fries/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place can basket&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_can_basket/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_can_basket/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_can_basket/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place cans plasticbox&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_cans_plasticbox/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_cans_plasticbox/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_cans_plasticbox/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place container plate&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_container_plate/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_container_plate/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_container_plate/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place dual shoes&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_dual_shoes/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_dual_shoes/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_dual_shoes/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place empty cup&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_empty_cup/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_empty_cup/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_empty_cup/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place fan&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_fan/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_fan/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_fan/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place mouse pad&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_mouse_pad/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_mouse_pad/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_mouse_pad/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place object basket&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_basket/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_basket/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_basket/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place object scale&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_scale/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_scale/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_scale/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place object stand&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_stand/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_stand/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_object_stand/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place phone stand&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_phone_stand/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_phone_stand/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_phone_stand/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place shoe&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_shoe/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_shoe/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/place_shoe/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Press stapler&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/press_stapler/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/press_stapler/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/press_stapler/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Put bottles dustbin&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/put_bottles_dustbin/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/put_bottles_dustbin/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/put_bottles_dustbin/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Put object cabinet&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/put_object_cabinet/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/put_object_cabinet/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/put_object_cabinet/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Rotate qrcode&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/rotate_qrcode/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/rotate_qrcode/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/rotate_qrcode/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Scan object&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/scan_object/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/scan_object/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/scan_object/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Shake bottle&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/shake_bottle/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/shake_bottle/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/shake_bottle/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Shake bottle horizontally&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/shake_bottle_horizontally/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/shake_bottle_horizontally/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/shake_bottle_horizontally/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack blocks three&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_blocks_three/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_blocks_three/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_blocks_three/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack blocks two&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_blocks_two/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_blocks_two/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_blocks_two/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack bowls three&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_bowls_three/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_bowls_three/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_bowls_three/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack bowls two&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_bowls_two/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_bowls_two/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stack_bowls_two/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stamp seal&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/stamp_seal/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stamp_seal/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/stamp_seal/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Turn switch&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_clean/turn_switch/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/turn_switch/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_clean/turn_switch/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage"></div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+        <p class="figure-caption selector-caption"><span class="selector-index"></span><span class="selector-label"></span></p>
+      </div>
+      <h3>Randomized</h3>
+      <p>Same tasks, with clutter and changes to background, lighting, and table height.</p>
+      <div class="selector" data-items="[{&quot;caption&quot;: &quot;Adjust bottle&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/adjust_bottle/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/adjust_bottle/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/adjust_bottle/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Beat block hammer&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/beat_block_hammer/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/beat_block_hammer/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/beat_block_hammer/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Blocks ranking rgb&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/blocks_ranking_rgb/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/blocks_ranking_rgb/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/blocks_ranking_rgb/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Blocks ranking size&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/blocks_ranking_size/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/blocks_ranking_size/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/blocks_ranking_size/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Click alarmclock&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/click_alarmclock/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/click_alarmclock/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/click_alarmclock/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Click bell&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/click_bell/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/click_bell/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/click_bell/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Dump bin bigbin&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/dump_bin_bigbin/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/dump_bin_bigbin/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/dump_bin_bigbin/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Grab roller&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/grab_roller/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/grab_roller/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/grab_roller/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Handover block&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/handover_block/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/handover_block/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/handover_block/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Handover mic&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/handover_mic/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/handover_mic/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/handover_mic/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Hanging mug&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/hanging_mug/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/hanging_mug/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/hanging_mug/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Lift pot&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/lift_pot/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/lift_pot/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/lift_pot/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move can pot&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_can_pot/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_can_pot/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_can_pot/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move pillbottle pad&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_pillbottle_pad/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_pillbottle_pad/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_pillbottle_pad/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move playingcard away&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_playingcard_away/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_playingcard_away/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_playingcard_away/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Move stapler pad&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_stapler_pad/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_stapler_pad/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/move_stapler_pad/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Open laptop&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/open_laptop/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/open_laptop/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/open_laptop/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Open microwave&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/open_microwave/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/open_microwave/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/open_microwave/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Pick diverse bottles&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/pick_diverse_bottles/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/pick_diverse_bottles/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/pick_diverse_bottles/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Pick dual bottles&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/pick_dual_bottles/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/pick_dual_bottles/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/pick_dual_bottles/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place a2b left&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_a2b_left/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_a2b_left/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_a2b_left/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place a2b right&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_a2b_right/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_a2b_right/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_a2b_right/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place bread basket&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_bread_basket/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_bread_basket/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_bread_basket/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place bread skillet&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_bread_skillet/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_bread_skillet/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_bread_skillet/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place burger fries&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_burger_fries/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_burger_fries/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_burger_fries/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place can basket&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_can_basket/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_can_basket/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_can_basket/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place cans plasticbox&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_cans_plasticbox/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_cans_plasticbox/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_cans_plasticbox/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place container plate&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_container_plate/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_container_plate/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_container_plate/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place dual shoes&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_dual_shoes/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_dual_shoes/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_dual_shoes/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place empty cup&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_empty_cup/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_empty_cup/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_empty_cup/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place fan&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_fan/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_fan/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_fan/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place mouse pad&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_mouse_pad/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_mouse_pad/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_mouse_pad/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place object basket&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_basket/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_basket/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_basket/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place object scale&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_scale/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_scale/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_scale/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place object stand&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_stand/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_stand/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_object_stand/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place phone stand&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_phone_stand/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_phone_stand/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_phone_stand/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Place shoe&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_shoe/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_shoe/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/place_shoe/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Press stapler&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/press_stapler/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/press_stapler/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/press_stapler/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Put bottles dustbin&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/put_bottles_dustbin/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/put_bottles_dustbin/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/put_bottles_dustbin/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Put object cabinet&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/put_object_cabinet/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/put_object_cabinet/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/put_object_cabinet/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Rotate qrcode&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/rotate_qrcode/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/rotate_qrcode/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/rotate_qrcode/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Scan object&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/scan_object/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/scan_object/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/scan_object/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Shake bottle&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/shake_bottle/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/shake_bottle/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/shake_bottle/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Shake bottle horizontally&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/shake_bottle_horizontally/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/shake_bottle_horizontally/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/shake_bottle_horizontally/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack blocks three&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_blocks_three/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_blocks_three/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_blocks_three/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack blocks two&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_blocks_two/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_blocks_two/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_blocks_two/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack bowls three&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_bowls_three/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_bowls_three/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_bowls_three/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stack bowls two&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_bowls_two/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_bowls_two/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stack_bowls_two/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Stamp seal&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stamp_seal/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stamp_seal/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/stamp_seal/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}, {&quot;caption&quot;: &quot;Turn switch&quot;, &quot;views&quot;: [{&quot;src&quot;: &quot;videos/robotwin/demo_randomized/turn_switch/left_camera.mp4&quot;, &quot;label&quot;: &quot;Left&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/turn_switch/head_camera.mp4&quot;, &quot;label&quot;: &quot;Head&quot;}, {&quot;src&quot;: &quot;videos/robotwin/demo_randomized/turn_switch/right_camera.mp4&quot;, &quot;label&quot;: &quot;Right&quot;}]}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage"></div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+        <p class="figure-caption selector-caption"><span class="selector-index"></span><span class="selector-label"></span></p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2 id="peg">Peg Insertion</h2>
+      <p>An 8.0 mm peg into an 8.1 mm hole. In simulation, CoRP reaches 90% success. These are success clips from training variants of that task. Use the arrows to move between them.</p>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/peg/01_baseline_minmax_4090_success_ep006.mp4?v=orig&quot;, &quot;caption&quot;: &quot;Baseline, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/02_affordance_minmax_4090_success_ep009.mp4&quot;, &quot;caption&quot;: &quot;Affordance, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/03_dino_lr1_minmax_4090_success_ep010.mp4&quot;, &quot;caption&quot;: &quot;DINO, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/04_global_batch128_minmax_4090_success_ep041.mp4&quot;, &quot;caption&quot;: &quot;Global batch 128, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/05_q01q99_4090_success_ep006.mp4&quot;, &quot;caption&quot;: &quot;q01–q99, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/06_ema_raw_4090_success_ep045.mp4&quot;, &quot;caption&quot;: &quot;EMA, raw actions, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/07_ema_4090_success_ep011.mp4&quot;, &quot;caption&quot;: &quot;EMA, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/08_affordance_minmax_a800_success_ep006.mp4&quot;, &quot;caption&quot;: &quot;Affordance, minmax, A800&quot;}, {&quot;src&quot;: &quot;videos/peg/09_dino_lr1_minmax_a800_success_ep010.mp4&quot;, &quot;caption&quot;: &quot;DINO, minmax, A800&quot;}, {&quot;src&quot;: &quot;videos/peg/10_q01q99_a800_success_ep027.mp4&quot;, &quot;caption&quot;: &quot;q01–q99, A800&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage">
+            <video controls playsinline loop muted preload="metadata"></video>
+          </div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tagline" id="real">Real-World.</div>
+    <div class="section">
+      <p>
+        The policy, after pretraining on more than 10,000 hours and 5,887 tasks.
+        Each clip is left, head, and right. The policy runs at about 20 ms per chunk.
+      </p>
+    </div>
+
+    <div class="section" id="pick">
+      <h2>Pick cup</h2>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/dynamic/dynamic_adjustment_01.mp4?v=31r&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/dynamic/dynamic_adjustment_02.mp4?v=1838&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/pick_cup/pick_cup_01.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/pick_cup/pick_cup_02.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/pick_cup/pick_cup_03.mp4&quot;, &quot;caption&quot;: &quot;&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage"></div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="spoon">
+      <h2>Place spoon</h2>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/more/real_2026_09_08_20_55_10.mp4&quot;, &quot;caption&quot;: &quot;Place spoon, 20:55:10.&quot;}, {&quot;src&quot;: &quot;videos/more/real_2026_09_08_21_06_50.mp4&quot;, &quot;caption&quot;: &quot;Place spoon, 21:06:50.&quot;}, {&quot;src&quot;: &quot;videos/place_spoon/place_spoon_01.mp4&quot;, &quot;caption&quot;: &quot;Place spoon, 21:16:12.&quot;}, {&quot;src&quot;: &quot;videos/more/real_2026_09_08_21_21_34.mp4&quot;, &quot;caption&quot;: &quot;Place spoon, 21:21:34.&quot;}, {&quot;src&quot;: &quot;videos/more/real_2026_09_08_21_23_28.mp4&quot;, &quot;caption&quot;: &quot;Place spoon, 21:23:28.&quot;}, {&quot;src&quot;: &quot;videos/more/real_2026_09_08_21_25_41.mp4&quot;, &quot;caption&quot;: &quot;Place spoon, 21:25:41.&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage"></div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="plug">
+      <h2>Plug insertion</h2>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/plug/plug_insert_01.mp4?v=mosaic&quot;, &quot;caption&quot;: &quot;Unplug the charger on the right and insert it into the left socket.&quot;}, {&quot;src&quot;: &quot;videos/plug/plug_insert_02.mp4&quot;, &quot;caption&quot;: &quot;Plug insertion, overhead view.&quot;}]">
+        <div class="selector-row">
+          <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
+          <div class="selector-stage"></div>
+          <button type="button" class="selector-btn next" aria-label="Next video">&#8250;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tagline" id="abstract">Abstract.</div>
+    <div class="section">
+      <div class="figure arch">
+        <img src="figs/architecture_v2.png" alt="CoRP architecture and a comparison of parameter count against larger policies">
+        <p class="figure-caption">
+          <strong>CoRP.</strong>
+          (a) The representation extractor, built from DINOv2, T5, and an MLP, outputs the conditioning sequence z<sub>t</sub>. A one-block flow-matching action generator turns that sequence into an action chunk.
+          (b) CoRP stays competitive with much larger systems at 0.049B parameters.
+        </p>
+      </div>
+      <p>
+        Multi-task manipulation policies differ in architecture, scale, and pretrained priors all at once, so published comparisons cannot attribute performance to any single component.
+        We argue that most of it comes from the visual representation, and that parameter scale and generative priors are largely incidental.
+      </p>
+      <p>
+        To test this, we build <strong>CoRP</strong> (Compressed Representation Policy), a deliberately compact policy (48.9M parameters, no vision-language model and no video-generative prior) that factorizes into a representation extractor and a flow-matching action generator.
+        It reaches 97.0% on LIBERO and 75.78% / 73.36% on RoboTwin 2.0 Clean / Randomized, matching systems 40.9–163.6× larger.
+      </p>
+      <p>
+        Holding the action generator fixed, we then vary one extractor property at a time.
+        Pretrained initialization is decisive: a random ViT-S/14 drops to 78.1% and an ImageNet ResNet-34 to 74.5% on LIBERO.
+        Pretraining alone is not enough, as freezing the encoder costs 19.8 points.
+        Compression matters as much: resampling each view to 48 tokens beats passing all patch tokens (97.0% vs 83.2%), and a variational information bottleneck over those tokens is worse than a hard token budget, cutting LIBERO-Goal from 95.8% to 33.0% by suppressing the instruction-dependent token selection the policy relies on.
+        Language conditioning contributes only where the observation leaves the goal ambiguous (LIBERO-Goal: 9.2% to 95.8%), while on RoboTwin 2.0, where observations are unambiguous, removing it slightly improves success.
+      </p>
+      <p>
+        A compact policy works when its representation is pretrained, task-adapted, and compressed.
+      </p>
+    </div>
+
+    <div class="tagline" id="experiments">Experiments.</div>
+    <div class="section" id="benchmarks">
+      <h2>Can a compact policy match much larger systems?</h2>
+      <p>
+        Yes. On LIBERO the default CoRP (0.049B) reaches 97.0%, 5.9 points above ProgVLA, the strongest compact policy in the comparison that also uses neither a VLM nor a video prior.
+        A wider or deeper variant goes further: 93.9% at d = 180 (0.037B) and 98.4% at L = 3 (0.063B). All ablations below use the one-block default.
+      </p>
+
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr>
+              <th>Method</th><th>Params (B)</th><th>Spatial</th><th>Object</th><th>Goal</th><th>Long</th><th>Avg.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="group"><td colspan="7">With a vision-language model</td></tr>
+            <tr><td>SmolVLA</td><td>2.25</td><td>93.0</td><td>94.0</td><td>91.0</td><td>77.0</td><td>88.8</td></tr>
+            <tr><td>π<sub>0</sub></td><td>3.3</td><td>96.8</td><td>98.8</td><td>95.8</td><td>85.2</td><td>94.1</td></tr>
+            <tr><td>π<sub>0.5</sub></td><td>3.3</td><td>98.8</td><td>98.2</td><td>98.0</td><td>92.4</td><td>96.9</td></tr>
+            <tr><td>OpenVLA</td><td>7.0</td><td>84.7</td><td>88.4</td><td>79.2</td><td>53.7</td><td>76.5</td></tr>
+            <tr><td>OpenVLA-OFT</td><td>7.0</td><td>97.6</td><td>98.4</td><td>97.9</td><td>94.5</td><td>97.1</td></tr>
+            <tr class="group"><td colspan="7">With a video generation model</td></tr>
+            <tr><td>Cosmos-Policy</td><td>2.0</td><td>98.1</td><td>100.0</td><td>98.2</td><td>97.6</td><td>98.5</td></tr>
+            <tr><td>Fast-WAM-Joint</td><td>6.0</td><td>99.6</td><td>99.4</td><td>98.2</td><td>96.8</td><td>98.5</td></tr>
+            <tr><td>Motus</td><td>8.0</td><td>96.8</td><td>99.8</td><td>96.6</td><td>97.6</td><td>97.7</td></tr>
+            <tr class="group"><td colspan="7">Without either prior</td></tr>
+            <tr><td>ACT</td><td>0.084</td><td>82.0</td><td>78.8</td><td>66.1</td><td>44.0</td><td>67.7</td></tr>
+            <tr><td>Diffusion Policy</td><td>0.157</td><td>78.3</td><td>92.5</td><td>68.3</td><td>50.5</td><td>72.4</td></tr>
+            <tr><td>Octo</td><td>0.093</td><td>78.9</td><td>85.7</td><td>84.6</td><td>51.1</td><td>75.1</td></tr>
+            <tr><td>ProgVLA</td><td>0.109</td><td>87.6</td><td>96.0</td><td>92.0</td><td>88.6</td><td>91.1</td></tr>
+            <tr><td>CoRP (L=1, d=180)</td><td>0.037</td><td>97.6</td><td>99.4</td><td>93.2</td><td>85.4</td><td>93.9</td></tr>
+            <tr class="ours"><td>CoRP (L=1, d=768, default)</td><td>0.049</td><td>98.2</td><td>99.4</td><td>95.8</td><td>94.4</td><td>97.0</td></tr>
+            <tr><td>CoRP (L=3, d=768)</td><td>0.063</td><td>98.2</td><td>99.6</td><td>98.8</td><td>97.0</td><td>98.4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Success rate (%) on LIBERO. 50 trials per task.</p>
+
+      <p>
+        On RoboTwin 2.0, CoRP (75.8% / 73.4%) outperforms X-VLA and π<sub>0.5</sub> and approaches Motus trained without its video pretraining (77.6% / 77.0).
+        It stays below video-pretrained Motus and GigaWorld-Policy.
+        Diffusion Policy and ACT, which learn a visual encoder without a large-scale pretrained vision model, collapse under randomization (0.6% and 1.7%). CoRP loses 2.4 points.
+      </p>
+
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr><th>Method</th><th>Params (B)</th><th>Clean</th><th>Randomized</th></tr>
+          </thead>
+          <tbody>
+            <tr class="group"><td colspan="4">With a vision-language model</td></tr>
+            <tr><td>X-VLA</td><td>0.9</td><td>72.9</td><td>72.8</td></tr>
+            <tr><td>π<sub>0</sub></td><td>3.3</td><td>46.4</td><td>16.3</td></tr>
+            <tr><td>π<sub>0.5</sub></td><td>3.3</td><td>43.0</td><td>43.8</td></tr>
+            <tr class="group"><td colspan="4">With a video generation model</td></tr>
+            <tr><td>Motus</td><td>8.0</td><td>88.7</td><td>87.0</td></tr>
+            <tr><td>Motus, without pretraining</td><td>8.0</td><td>77.6</td><td>77.0</td></tr>
+            <tr><td>GigaWorld-Policy</td><td>11.4</td><td>86.4</td><td>85.0</td></tr>
+            <tr class="group"><td colspan="4">Without either prior</td></tr>
+            <tr><td>ACT</td><td>0.084</td><td>29.7</td><td>1.7</td></tr>
+            <tr><td>Diffusion Policy</td><td>0.157</td><td>28.0</td><td>0.6</td></tr>
+            <tr class="ours"><td>CoRP</td><td>0.049</td><td>75.8</td><td>73.4</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Success rate (%) on RoboTwin 2.0. 100 trials per task, averaged over 50 tasks.</p>
+
+    </div>
+
+
+    <div class="section" id="init">
+      <h2>Does a pretrained visual encoder help?</h2>
+      <p>
+        Yes. A DINOv2-initialized ViT-S/14 beats every other encoder variant by at least 14.9 points on average LIBERO success.
+        Neither factor is enough on its own: with random initialization the ViT is no better than the ResNet (78.1% vs 82.1%), and ImageNet pretraining does not help the ResNet (74.5% vs 82.1%).
+        All four variants identify the task at 100% accuracy. The pretrained ResNet still only reaches 37.0% on LIBERO-Goal: the policy knows the task and lacks the visual detail to carry it out.
+      </p>
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr>
+              <th>Encoder</th><th>Spatial</th><th>Object</th><th>Goal</th><th>Long</th><th>Avg.</th><th>NMAE</th><th>R²</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Random ResNet-34</td><td>91.2</td><td>97.8</td><td>72.8</td><td>66.6</td><td>82.1</td><td>0.12</td><td>0.54</td></tr>
+            <tr><td>ImageNet ResNet-34</td><td>85.4</td><td>98.8</td><td>37.0</td><td>76.8</td><td>74.5</td><td>0.09</td><td>0.73</td></tr>
+            <tr><td>Random ViT-S/14</td><td>84.4</td><td>95.6</td><td>86.0</td><td>46.4</td><td>78.1</td><td>0.11</td><td>0.59</td></tr>
+            <tr class="ours"><td>DINOv2 ViT-S/14</td><td>98.2</td><td>99.4</td><td>95.8</td><td>94.4</td><td>97.0</td><td>0.07</td><td>0.81</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">LIBERO success (%). NMAE and R² are from a frozen probe that predicts the action chunk from the visual prefix. Lower NMAE and higher R² mean a more action-informative representation.</p>
+    </div>
+
+    <div class="section" id="adaptation">
+      <h2>Is pretraining enough without adaptation?</h2>
+      <div class="figure tsne">
+        <img src="figs/t-sne_analysis2.png" alt="t-SNE of visual-prefix tokens with a frozen encoder and with fine-tuning">
+        <p class="figure-caption">
+          <strong>t-SNE of the visual prefix, frozen versus fine-tuned.</strong>
+          A frozen DINOv2 encoder leaves a less useful representation for control.
+        </p>
+      </div>
+      <p>
+        No. Freezing the pretrained encoder drops average LIBERO success from 97.0% to 77.2%, no better than a randomly initialized ViT trained end to end (78.1%).
+        The probe agrees: freezing cuts R² from 0.81 to 0.24 and roughly doubles NMAE, from 0.07 to 0.16.
+      </p>
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr><th>Visual encoder</th><th>Average</th><th>NMAE</th><th>R²</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Frozen DINOv2</td><td>77.2</td><td>0.16</td><td>0.24</td></tr>
+            <tr class="ours"><td>Fine-tuned</td><td>97.0</td><td>0.07</td><td>0.81</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="language">
+      <h2>When does language conditioning help?</h2>
+      <div class="figure tsne">
+        <img src="figs/t-sne_analysis.png" alt="t-SNE of visual-prefix tokens with and without language on LIBERO">
+        <p class="figure-caption">
+          <strong>t-SNE of the visual prefix with and without language.</strong>
+          Without the instruction, Goal tasks collapse together. Spatial tasks stay mostly separable.
+        </p>
+      </div>
+      <p>
+        Language is a disambiguator, not a general source of task knowledge.
+        On LIBERO-Goal, where one scene is shared across instructions, removing language drops success from 95.8% to 9.2%, near the 10% chance level of a 10-task suite.
+        The other suites lose at most 11.2 points.
+        On RoboTwin 2.0, where the scene identifies the task, removing language raises success from 75.8% to 78.5% (Clean) and from 73.4% to 76.1% (Randomized).
+      </p>
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr>
+              <th>LIBERO</th>
+              <th colspan="2">Spatial</th>
+              <th colspan="2">Object</th>
+              <th colspan="2">Goal</th>
+              <th colspan="2">Long</th>
+              <th colspan="2">Average</th>
+            </tr>
+            <tr>
+              <th></th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Without language</td><td>90.4</td><td>87.0</td><td>100.0</td><td>100.0</td><td>8.6</td><td>9.2</td><td>89.0</td><td>83.4</td><td>72.0</td><td>69.9</td></tr>
+            <tr class="ours"><td>With language</td><td>100.0</td><td>98.2</td><td>100.0</td><td>99.4</td><td>100.0</td><td>95.8</td><td>100.0</td><td>94.4</td><td>100.0</td><td>97.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Acc. is first-frame task-head accuracy. S.R. is success rate.</p>
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr>
+              <th>RoboTwin 2.0</th>
+              <th colspan="2">Clean</th>
+              <th colspan="2">Randomized</th>
+            </tr>
+            <tr><th></th><th>Acc.</th><th>S.R.</th><th>Acc.</th><th>S.R.</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Without language</td><td>99.96</td><td>78.50</td><td>99.92</td><td>76.06</td></tr>
+            <tr class="ours"><td>With language</td><td>99.78</td><td>75.78</td><td>99.58</td><td>73.36</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section" id="bottleneck">
+      <h2>Does the information bottleneck help?</h2>
+      <p>
+        A hard token budget does. Passing every patch token scores 83.2%. Resampling each view to 48 instruction-conditioned tokens scores 97.0%.
+        The gain is concentrated on LIBERO-Goal (55.8% to 95.8%), the suite where the instruction alone specifies the goal.
+        Swapping the instruction while holding the observation fixed changes the resampled visual prefix by 49.7%, and the all-token prefix by only 5.4%.
+      </p>
+      <p>
+        A variational bottleneck does the opposite. It compresses every token toward the same prior, regardless of what the current instruction needs.
+        On the resampled prefix it cuts the instruction-induced change from 49.7% to 13.6% and Goal success from 95.8% to 33.0%.
+        All-tokens plus VIB still names the Goal task at 99.9% accuracy and succeeds only 33.6% of the time.
+      </p>
+      <div class="table-wrap">
+        <table class="results">
+          <thead>
+            <tr>
+              <th></th>
+              <th colspan="2">Spatial</th>
+              <th colspan="2">Object</th>
+              <th colspan="2">Goal</th>
+              <th colspan="2">Long</th>
+              <th colspan="2">Average</th>
+            </tr>
+            <tr>
+              <th>Method</th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+              <th>Acc.</th><th>S.R.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>All tokens</td><td>93.8</td><td>89.6</td><td>100.0</td><td>99.6</td><td>91.4</td><td>55.8</td><td>100.0</td><td>87.6</td><td>96.3</td><td>83.2</td></tr>
+            <tr><td>All tokens + VIB</td><td>99.8</td><td>87.8</td><td>100.0</td><td>99.4</td><td>99.9</td><td>33.6</td><td>100.0</td><td>90.2</td><td>99.9</td><td>77.8</td></tr>
+            <tr class="ours"><td>48 tokens</td><td>100.0</td><td>98.2</td><td>100.0</td><td>99.4</td><td>100.0</td><td>95.8</td><td>100.0</td><td>94.4</td><td>100.0</td><td>97.0</td></tr>
+            <tr><td>48 tokens + VIB</td><td>91.6</td><td>87.8</td><td>99.9</td><td>99.2</td><td>69.6</td><td>33.0</td><td>95.5</td><td>83.6</td><td>89.2</td><td>75.9</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="tagline" id="conclusion">Conclusion.</div>
+    <div class="section">
+      <p>
+        CoRP is a 48.9M-parameter policy with an ordinary flow-matching action generator and no VLM or video prior.
+        On these closed-set benchmarks it matches systems up to 163× larger, and the same compact design transfers to a real bimanual robot.
+        Across the ablations, weaker variants still recognize the task and fail to perform it. What they lack is fine-grained, instruction-specific visual detail.
+      </p>
+      <p>
+        The study measures in-distribution control. It does not test the open-world semantic and physical generalization that VLAs and world-action models are built for.
+        Whether a pretrained, task-adapted, compressed representation is enough in that regime is open.
+      </p>
+    </div>
+
+    <div class="bibtex-code" id="bibtex">
+      <div class="bibtex-title">BibTeX</div>
+      <pre><code>@inproceedings{corp2027,
+  title     = {Compact Robot Policies Need Fine-Grained Visual Representations},
+  author    = {Anonymous},
+  booktitle = {Under review at the International Conference on Learning Representations},
+  year      = {2027},
+  url       = {https://corp-policy.github.io/}
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="footer">
+    Project page for CoRP. Layout adapted from the <a href="https://github.com/vita-epfl/RAP" target="_blank" rel="noopener">RAP</a> project page.
+  </div>
+
+  <script>
+    document.querySelectorAll(".selector[data-items]").forEach(function (root) {
+      var items = JSON.parse(root.dataset.items);
+      var index = 0;
+      var stage = root.querySelector(".selector-stage");
+      var indexEl = root.querySelector(".selector-index");
+      var labelEl = root.querySelector(".selector-label");
+      var prev = root.querySelector(".prev");
+      var next = root.querySelector(".next");
+
+      function viewsOf(item) {
+        if (item.views) return item.views;
+        return [{ src: item.src, label: "" }];
+      }
+
+      function ensure(n) {
+        var slots = stage.querySelectorAll(".view");
+        if (slots.length === n) return slots;
+        stage.replaceChildren();
+        for (var i = 0; i < n; i++) {
+          var slot = document.createElement("div");
+          slot.className = "view";
+          var video = document.createElement("video");
+          video.controls = true;
+          video.playsInline = true;
+          video.loop = true;
+          video.muted = true;
+          video.preload = "metadata";
+          var label = document.createElement("div");
+          label.className = "view-label";
+          slot.appendChild(video);
+          slot.appendChild(label);
+          stage.appendChild(slot);
+        }
+        return stage.querySelectorAll(".view");
+      }
+
+      function show(nextIndex, autoplay) {
+        index = (nextIndex + items.length) % items.length;
+        var item = items[index];
+        var views = viewsOf(item);
+        var slots = ensure(views.length);
+        slots.forEach(function (slot, i) {
+          var video = slot.querySelector("video");
+          var label = slot.querySelector(".view-label");
+          label.textContent = views[i].label || "";
+          if (video.getAttribute("src") !== views[i].src) {
+            video.pause();
+            video.src = views[i].src;
+            if (autoplay) {
+              var playWhenReady = function () {
+                video.play().catch(function () {});
+                video.removeEventListener("loadeddata", playWhenReady);
+              };
+              video.addEventListener("loadeddata", playWhenReady);
+              video.load();
+            }
+          } else if (autoplay) {
+            video.play().catch(function () {});
+          }
+        });
+        if (labelEl) labelEl.textContent = item.caption || "";
+        if (indexEl) indexEl.textContent = "";
+        var single = items.length < 2;
+        prev.disabled = single;
+        next.disabled = single;
+      }
+
+      prev.addEventListener("click", function () { show(index - 1, true); });
+      next.addEventListener("click", function () { show(index + 1, true); });
+      root.addEventListener("keydown", function (event) {
+        if (event.key === "ArrowLeft") { event.preventDefault(); show(index - 1, true); }
+        if (event.key === "ArrowRight") { event.preventDefault(); show(index + 1, true); }
+      });
+      show(0, false);
+    });
+  </script>
 </body>
 </html>
