@@ -655,6 +655,18 @@ video.r2s-video-item {
   margin: -8px 0 28px;
 }
 
+.kicker strong {
+  font-weight: 700;
+}
+
+.emph {
+  font-weight: 700;
+  background-image: linear-gradient(90deg, #648FFF 0%, #DC267F 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
 .section h2 {
   font-family: 'Playfair Display', serif;
   font-size: 28px;

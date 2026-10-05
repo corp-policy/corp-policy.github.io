@@ -6,7 +6,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="CoRP is a 48.9M-parameter manipulation policy. On closed-set benchmarks, its performance comes from a visual representation that is pretrained, task-adapted, and compressed.">
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <div class="toc">
@@ -36,7 +36,7 @@
   <div class="main-content">
     <div class="hero-text">CoRP</div>
     <div class="sub-hero-text">Compact Robot Policies Need Fine-Grained Visual Representations</div>
-    <p class="kicker">Compressed Representation Policy · 48.9M parameters · no vision-language model · no video-generative prior</p>
+    <p class="kicker"><strong>Compressed Representation Policy · 48.9M parameters · no vision-language model · no video-generative prior</strong></p>
 
     <div class="authors">
       Anonymous Authors
@@ -49,9 +49,9 @@
     <div class="tagline" id="contribution">Contribution.</div>
     <div class="section">
       <ul>
-        <li><strong>Compressed Representation Policy (CoRP)</strong>, a 48.9M-parameter policy without any VLM or video-generative prior that is competitive with systems up to 163× larger on LIBERO and RoboTwin 2.0, and serves as a controlled testbed for isolating the role of representation.</li>
-        <li><strong>A controlled ablation study</strong> that varies encoder initialization, fine-tuning, token compression, and language conditioning one at a time, showing that effective compact policies require visual representations that are pretrained, task-adapted, and compressed, and that language helps only when the goal is visually ambiguous.</li>
-        <li><strong>Real-robot validation</strong> on three bimanual tasks (closed-loop adaptation to object displacement, coordinated two-arm placement, and precision plug insertion), providing qualitative evidence that CoRP, pretrained on our large-scale real-world corpus, transfers to physical hardware.</li>
+        <li><strong>Compressed Representation Policy (CoRP)</strong>, a <strong>48.9M-parameter policy</strong> without any VLM or video-generative prior that is competitive with systems up to <strong>163×</strong> larger on LIBERO and RoboTwin 2.0, and serves as a controlled testbed for isolating the role of representation.</li>
+        <li><strong>A controlled ablation study</strong> that varies encoder initialization, fine-tuning, token compression, and language conditioning one at a time, showing that effective compact policies require visual representations that are pretrained, task-adapted, and compressed, and that <strong>language helps only when the goal is visually ambiguous</strong>.</li>
+        <li><strong>Real-robot validation</strong> on three <strong>bimanual tasks</strong> (closed-loop adaptation to object displacement, coordinated two-arm placement, and precision plug insertion), providing qualitative evidence that CoRP, pretrained on our large-scale real-world corpus, transfers to physical hardware.</li>
       </ul>
     </div>
 
@@ -142,8 +142,8 @@
 
     <div class="section">
       <h2 id="peg">Peg Insertion</h2>
-      <p>An 8.0 mm peg into an 8.1 mm hole. In simulation, CoRP reaches 90% success. These are success clips from training variants of that task. Use the arrows to move between them.</p>
-      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/peg/01_baseline_minmax_4090_success_ep006.mp4?v=orig&quot;, &quot;caption&quot;: &quot;Baseline, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/02_affordance_minmax_4090_success_ep009.mp4&quot;, &quot;caption&quot;: &quot;Affordance, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/03_dino_lr1_minmax_4090_success_ep010.mp4&quot;, &quot;caption&quot;: &quot;DINO, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/04_global_batch128_minmax_4090_success_ep041.mp4&quot;, &quot;caption&quot;: &quot;Global batch 128, minmax, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/05_q01q99_4090_success_ep006.mp4&quot;, &quot;caption&quot;: &quot;q01–q99, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/06_ema_raw_4090_success_ep045.mp4&quot;, &quot;caption&quot;: &quot;EMA, raw actions, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/07_ema_4090_success_ep011.mp4&quot;, &quot;caption&quot;: &quot;EMA, 4090&quot;}, {&quot;src&quot;: &quot;videos/peg/08_affordance_minmax_a800_success_ep006.mp4&quot;, &quot;caption&quot;: &quot;Affordance, minmax, A800&quot;}, {&quot;src&quot;: &quot;videos/peg/09_dino_lr1_minmax_a800_success_ep010.mp4&quot;, &quot;caption&quot;: &quot;DINO, minmax, A800&quot;}, {&quot;src&quot;: &quot;videos/peg/10_q01q99_a800_success_ep027.mp4&quot;, &quot;caption&quot;: &quot;q01–q99, A800&quot;}]">
+      <p>An 8.0 mm peg into an 8.1 mm hole. In simulation, <strong>CoRP reaches 90% success</strong>. These are success clips from training variants of that task. Use the arrows to move between them.</p>
+      <div class="selector" data-items="[{&quot;src&quot;: &quot;videos/peg/01.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/02.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/03.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/04.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/05.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/06.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/07.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/08.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/09.mp4&quot;, &quot;caption&quot;: &quot;&quot;}, {&quot;src&quot;: &quot;videos/peg/10.mp4&quot;, &quot;caption&quot;: &quot;&quot;}]">
         <div class="selector-row">
           <button type="button" class="selector-btn prev" aria-label="Previous video">&#8249;</button>
           <div class="selector-stage">
@@ -157,7 +157,7 @@
     <div class="tagline" id="real">Real-World.</div>
     <div class="section">
       <p>
-        The policy, after pretraining on more than 10,000 hours and 5,887 tasks.
+        The policy, after pretraining on more than <strong>10,000 hours</strong> and <strong>5,887 tasks</strong>.
         Each clip is left, head, and right. The policy runs at about 20 ms per chunk.
       </p>
     </div>
@@ -210,15 +210,15 @@
         We argue that most of it comes from the visual representation, and that parameter scale and generative priors are largely incidental.
       </p>
       <p>
-        To test this, we build <strong>CoRP</strong> (Compressed Representation Policy), a deliberately compact policy (48.9M parameters, no vision-language model and no video-generative prior) that factorizes into a representation extractor and a flow-matching action generator.
-        It reaches 97.0% on LIBERO and 75.78% / 73.36% on RoboTwin 2.0 Clean / Randomized, matching systems 40.9–163.6× larger.
+        To test this, we build <strong>CoRP</strong> (Compressed Representation Policy), a deliberately compact policy (<strong>48.9M parameters, no vision-language model and no video-generative prior</strong>) that factorizes into a representation extractor and a flow-matching action generator.
+        It reaches <strong>97.0% on LIBERO</strong> and <strong>75.78% / 73.36% on RoboTwin 2.0 Clean / Randomized</strong>, matching systems <strong>40.9–163.6× larger</strong>.
       </p>
       <p>
         Holding the action generator fixed, we then vary one extractor property at a time.
-        Pretrained initialization is decisive: a random ViT-S/14 drops to 78.1% and an ImageNet ResNet-34 to 74.5% on LIBERO.
+        Pretrained initialization is decisive: <strong>a random ViT-S/14 drops to 78.1%</strong> and <strong>an ImageNet ResNet-34 to 74.5% on LIBERO</strong>.
         Pretraining alone is not enough, as freezing the encoder costs 19.8 points.
-        Compression matters as much: resampling each view to 48 tokens beats passing all patch tokens (97.0% vs 83.2%), and a variational information bottleneck over those tokens is worse than a hard token budget, cutting LIBERO-Goal from 95.8% to 33.0% by suppressing the instruction-dependent token selection the policy relies on.
-        Language conditioning contributes only where the observation leaves the goal ambiguous (LIBERO-Goal: 9.2% to 95.8%), while on RoboTwin 2.0, where observations are unambiguous, removing it slightly improves success.
+        Compression matters as much: resampling each view to 48 tokens beats passing all patch tokens (97.0% vs 83.2%), and a variational information bottleneck over those tokens is worse than a hard token budget, <strong>cutting LIBERO-Goal from 95.8% to 33.0%</strong> by suppressing the instruction-dependent token selection the policy relies on.
+        Language conditioning contributes only where the observation leaves the goal ambiguous (<strong>LIBERO-Goal: 9.2% to 95.8%</strong>), while on RoboTwin 2.0, where observations are unambiguous, removing it slightly improves success.
       </p>
       <p>
         A compact policy works when its representation is pretrained, task-adapted, and compressed.
@@ -229,8 +229,8 @@
     <div class="section" id="benchmarks">
       <h2>Can a compact policy match much larger systems?</h2>
       <p>
-        Yes. On LIBERO the default CoRP (0.049B) reaches 97.0%, 5.9 points above ProgVLA, the strongest compact policy in the comparison that also uses neither a VLM nor a video prior.
-        A wider or deeper variant goes further: 93.9% at d = 180 (0.037B) and 98.4% at L = 3 (0.063B). All ablations below use the one-block default.
+        Yes. On LIBERO the default CoRP (0.049B) reaches <strong class="emph">97.0%, 5.9 points above ProgVLA</strong>, the <strong class="emph">strongest compact policy</strong> in the comparison that also uses neither a VLM nor a video prior.
+        A wider or deeper variant goes further: <strong>93.9% at d = 180 (0.037B) and 98.4% at L = 3 (0.063B)</strong>. All ablations below use the one-block default.
       </p>
 
       <div class="table-wrap">
@@ -265,7 +265,7 @@
       <p class="table-note">Success rate (%) on LIBERO. 50 trials per task.</p>
 
       <p>
-        On RoboTwin 2.0, CoRP (75.8% / 73.4%) outperforms X-VLA and π<sub>0.5</sub> and approaches Motus trained without its video pretraining (77.6% / 77.0).
+        On <strong>RoboTwin 2.0, CoRP (75.8% / 73.4%) outperforms X-VLA and π<sub>0.5</sub></strong> and <strong>approaches Motus trained without its video pretraining (77.6% / 77.0)</strong>.
         It stays below video-pretrained Motus and GigaWorld-Policy.
         Diffusion Policy and ACT, which learn a visual encoder without a large-scale pretrained vision model, collapse under randomization (0.6% and 1.7%). CoRP loses 2.4 points.
       </p>
@@ -299,7 +299,7 @@
     <div class="section" id="init">
       <h2>Does a pretrained visual encoder help?</h2>
       <p>
-        Yes. A DINOv2-initialized ViT-S/14 beats every other encoder variant by at least 14.9 points on average LIBERO success.
+        <strong>Yes. A DINOv2-initialized ViT-S/14 beats every other encoder variant by at least 14.9 points on average LIBERO success.</strong>
         Neither factor is enough on its own: with random initialization the ViT is no better than the ResNet (78.1% vs 82.1%), and ImageNet pretraining does not help the ResNet (74.5% vs 82.1%).
         All four variants identify the task at 100% accuracy. The pretrained ResNet still only reaches 37.0% on LIBERO-Goal: the policy knows the task and lacks the visual detail to carry it out.
       </p>
@@ -331,7 +331,7 @@
         </p>
       </div>
       <p>
-        No. Freezing the pretrained encoder drops average LIBERO success from 97.0% to 77.2%, no better than a randomly initialized ViT trained end to end (78.1%).
+        <strong>No. Freezing the pretrained encoder drops average LIBERO success from 97.0% to 77.2%, no better than a randomly initialized ViT trained end to end (78.1%).</strong>
         The probe agrees: freezing cuts R² from 0.81 to 0.24 and roughly doubles NMAE, from 0.07 to 0.16.
       </p>
       <div class="table-wrap">
@@ -410,7 +410,7 @@
     <div class="section" id="bottleneck">
       <h2>Does the information bottleneck help?</h2>
       <p>
-        A hard token budget does. Passing every patch token scores 83.2%. Resampling each view to 48 instruction-conditioned tokens scores 97.0%.
+        <strong>A hard token budget does. Passing every patch token scores 83.2%. Resampling each view to 48 instruction-conditioned tokens scores 97.0%.</strong>
         The gain is concentrated on LIBERO-Goal (55.8% to 95.8%), the suite where the instruction alone specifies the goal.
         Swapping the instruction while holding the observation fixed changes the resampled visual prefix by 49.7%, and the all-token prefix by only 5.4%.
       </p>
